@@ -2,19 +2,29 @@
 
 namespace App;
 
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Support\Facades\Hash;
 
-class User extends Authenticatable
+
+class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
+
+
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
+    protected $table = 'users';
+
+    // const CREATED_AT = 'created';
+    // const UPDATED_AT = 'updated';
+
     protected $fillable = [
         'name', 'email', 'password',
     ];
@@ -28,12 +38,27 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    public function setPasswordAttribute($value) {
+        $this->attributes['password'] = Hash::make($value);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    public function toUser($token = false)
+    {
+        $payload = $this->getPayload($token);
+
+        if (! $user = $this->user->getBy($this->identifier, $payload['sub'])) {
+            return false;
+        }
+
+        return $user;
+    }
 }

@@ -17,3 +17,16 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('register', 'UserController@register');
+Route::post('login', 'UserController@login');
+
+Route::middleware(['jwt.verify'])->group(function () {
+    // Route::auth();
+    Route::get('user', 'UserController@getAuthenticatedUser');
+    Route::get('logout', 'UserController@logout');
+    Route::get('refresh', 'UserController@refresh'); // refresh token
+    Route::get('trial', function(Request $request){
+        return $request->all();
+    });
+});
