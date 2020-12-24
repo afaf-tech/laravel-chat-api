@@ -15,28 +15,30 @@ class MessageController extends Controller
 
         $check = DB::table('table_messages as m')
                 ->select('u.name','m.to_user_id', DB::raw('(CASE
-                WHEN m.is_read = 0 THEN  COUNT(m.is_read) END) AS unread_count'))
-                // ->orderBy('m.sent_at', 'desc')
+                WHEN m.is_read = 0 THEN  COUNT(m.is_read)  END) AS unread_count'))
                 ->leftJoin('users as u', 'u.id', '=', 'm.to_user_id')
                 ->groupBy('m.to_user_id', 'u.name', 'm.is_read')
                 ->where('m.from_user_id', $myId)
-                ->distinct('unread')
+                // ->orderBy('m.sent_at', 'desc')
                 ->get();
-
-        foreach ($check as $key => $value) {
-            if($value->unread_count != null){
-                $value->last_message = DB::table('table_messages')->where('to_user_id',$value->to_user_id)->latest('sent_at')->first();
-            }else{
-                unset($check[$key]);
-            }
-        }
 
         if(!$check){
             return response([
                 'status' => 'Not Found',
-                'message' => "No Messages Found"
+                'message' => "No Data Found"
             ], 404);
         }
+
+        foreach ($check as $key => $value) {
+            if(!is_null($value->unread_count)){
+                $value->last_message = DB::table('table_messages')->where('to_user_id',$value->to_user_id)->where('from_user_id',$myId)->latest('sent_at')->first();
+            }else{
+                $value->last_message = DB::table('table_messages')->where('to_user_id',$value->to_user_id)->where('from_user_id',$myId)->latest('sent_at')->first();
+                $value->unread_count = 0;
+            }
+        }
+
+
         return response([
             'status'=> 'OK',
             'data'=> $check
@@ -55,13 +57,27 @@ class MessageController extends Controller
               ->where('to_user_id', $myId)
               ->where('from_user_id', $id_user)
               ->update(['is_read' => 1]);
-        $check = DB::table('table_messages as m')
+
+        $fromMe = DB::table('table_messages as m')
                 ->select('m.message_id', 'm.message','m.sent_at', DB::raw('(CASE
-                WHEN m.from_user_id = "'.$id_user.'" THEN u.name ELSE "you" END) AS sender'), 'm.is_read')
-                ->leftJoin('users as u', 'u.id', '=', 'm.to_user_id')
-                ->where('m.to_user_id', $id_user)
-                ->orWhere('m.to_user_id', $myId)->get();
-        if(!$check){
+                WHEN m.from_user_id = "'.$myId.'" THEN u.name ELSE "you" END) AS sender'), 'm.is_read')
+                ->join('users as u', function ($join) use ($myId, $id_user) {
+                    $join->on('u.id', '=', 'm.to_user_id')
+                        ->where('m.to_user_id', '=', $id_user )
+                        ->where('m.from_user_id', $myId);
+                })->get()->toArray();
+        $fromAnotherUser = DB::table('table_messages as m')
+                ->select('m.message_id', 'm.message','m.sent_at', DB::raw('(CASE
+                WHEN m.to_user_id = "'.$id_user.'" THEN u.name ELSE "you" END) AS sender'), 'm.is_read')
+                ->join('users as u', function ($join) use ($myId, $id_user) {
+                    $join->on('u.id', '=', 'm.to_user_id')
+                        ->where('m.from_user_id', '=', $id_user )
+                        ->where('m.to_user_id', $myId);
+                })->get()->toArray();
+        $result = array_merge( $fromMe, $fromAnotherUser );
+        // $result = array_map("unserialize", array_unique(array_map("serialize", $result)));
+        sort( $result );
+        if(!$result){
             return response([
                 'status' => 'Not Found',
                 'message' => "No Messages Found"
@@ -69,7 +85,7 @@ class MessageController extends Controller
         }
         return response([
             'status'=> 'OK',
-            'data'=> $check
+            'data'=> $result
         ], 200);
     }
 
