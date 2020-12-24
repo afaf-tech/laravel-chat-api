@@ -21,4 +21,29 @@ How to use this api?
 8. `php artisan serve`
 9. continue to watch postman documentation and implement it on your postman app!
 
+NB: you can also use the provided sql database and import it to your own database. 
+
 :raised_hands::collision:  Up and Running :collision::raised_hands::raised_hands:
+
+### Important Endpoints
+
+list of endpoints available 
+
+#endpoint                       | #METHOD      | #information
+-----------------------         | -------------| -----------------------
+api/register                    | POST         | Register a new account
+api/login                       | GET          | Login your account
+api/logout                      | GET          | Logout 
+api/refresh                     | GET          | Refresh JWT Token
+api/whoami                      | GET          | check the current user
+api/messages/with/{to_user_id}  | GET          | watch your certain conversation
+api/messages/all/               | GET          | watch your all conversation with latest messages and unreadcount
+api/messages/send/              | POST         | Open manage server
+
+
+### License
+
+Copyright (C) afaf-tech.id - All Rights Reserved
+Unauthorized copying of this file, via any medium is strictly prohibited
+Proprietary and confidential
+Written by afaf-tech , Desember 2020
