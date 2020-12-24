@@ -26,7 +26,13 @@ Route::middleware(['jwt.verify'])->group(function () {
     Route::get('user', 'UserController@getAuthenticatedUser');
     Route::get('logout', 'UserController@logout');
     Route::get('refresh', 'UserController@refresh'); // refresh token
-    Route::get('trial', function(Request $request){
-        return $request->all();
+
+    // private messages
+    Route::group(['prefix' => 'messages'], function () {
+        // Route::get('list', 'MessageController@list');
+        Route::get('list/{id_user}', 'MessageController@list');
+        Route::post('send', 'MessageController@send');
+        Route::put('update/{id_project}', 'MessageController@update');
+        Route::delete('delete/{id_project}', 'MessageController@delete');
     });
 });

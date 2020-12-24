@@ -19,7 +19,7 @@ class CreateTableMessages extends Migration
             $table->string('message');
             $table->integer('from_user_id');
             $table->integer('to_user_id');
-            $table->boolean('is_read');
+            $table->boolean('is_read')->default(0);
             $table->timestamp('sent_at')->default(DB::raw('CURRENT_TIMESTAMP'));
         });
 
