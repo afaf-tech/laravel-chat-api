@@ -8,7 +8,42 @@ use DB;
 class MessageController extends Controller
 {
     //
-    public function list(Request $request, $id_user){
+
+
+    public function all(Request $request){
+        $myId = $request->user()->id;
+
+        $check = DB::table('table_messages as m')
+                ->select('u.name','m.to_user_id', DB::raw('(CASE
+                WHEN m.is_read = 0 THEN  COUNT(m.is_read) END) AS unread_count'))
+                // ->orderBy('m.sent_at', 'desc')
+                ->leftJoin('users as u', 'u.id', '=', 'm.to_user_id')
+                ->groupBy('m.to_user_id', 'u.name', 'm.is_read')
+                ->where('m.from_user_id', $myId)
+                ->distinct('unread')
+                ->get();
+
+        foreach ($check as $key => $value) {
+            if($value->unread_count != null){
+                $value->last_message = DB::table('table_messages')->where('to_user_id',$value->to_user_id)->latest('sent_at')->first();
+            }else{
+                unset($check[$key]);
+            }
+        }
+
+        if(!$check){
+            return response([
+                'status' => 'Not Found',
+                'message' => "No Messages Found"
+            ], 404);
+        }
+        return response([
+            'status'=> 'OK',
+            'data'=> $check
+        ], 200);
+    }
+
+    public function with(Request $request, $id_user){
         $myId = $request->user()->id;
         if($myId == $id_user){
             return response([

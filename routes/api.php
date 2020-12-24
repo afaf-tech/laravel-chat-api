@@ -30,7 +30,8 @@ Route::middleware(['jwt.verify'])->group(function () {
     // private messages
     Route::group(['prefix' => 'messages'], function () {
         // Route::get('list', 'MessageController@list');
-        Route::get('list/{id_user}', 'MessageController@list');
+        Route::get('with/{id_user}', 'MessageController@with');
+        Route::get('/all', 'MessageController@all');
         Route::post('send', 'MessageController@send');
         Route::put('update/{id_project}', 'MessageController@update');
         Route::delete('delete/{id_project}', 'MessageController@delete');
