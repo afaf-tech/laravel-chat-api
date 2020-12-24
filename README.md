@@ -46,4 +46,4 @@ api/messages/send/              | POST         | Open manage server
 Copyright (C) afaf-tech.id - All Rights Reserved
 Unauthorized copying of this file, via any medium is strictly prohibited
 Proprietary and confidential
-Written by afaf-tech , August 2019
+Written by afaf-tech , Desember 2020
